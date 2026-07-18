@@ -8,7 +8,7 @@ mod.id = "aetherhop"
 mod.name = "AetherHop"
 mod.group = "fr.jason.aetherhop"
 mod.version = "1.0.0"
-mod.description = "Connect to through a SOCKS/HTTP proxy."
+mod.description = "Connect to a server through a SOCKS/HTTP proxy."
 
 deps.fabric_loader = "0.19.3"
 loomx.loom_version = "1.17-SNAPSHOT"

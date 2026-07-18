@@ -52,6 +52,8 @@ public abstract class ConnectionProxyMixin {
         Proxy proxy = ProxyConnector.resolve(AetherHop.config());
         if (proxy == null) return;
 
+        org.slf4j.LoggerFactory.getLogger("AetherHop").info("Intercepting connection to {} via proxy", address);
+
         Bootstrap bootstrap = new Bootstrap()
             .group(new NioEventLoopGroup(0))
             .channel(NioSocketChannel.class)
