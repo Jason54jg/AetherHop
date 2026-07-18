@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "package": "fr.jason.aetherhop.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "mixins": [
+    "ConnectionProxyMixin"
+  ],
+  "client": [
+    "JoinMultiplayerScreenMixin"
+  ]
+}

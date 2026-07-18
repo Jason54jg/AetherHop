@@ -1,0 +1,14 @@
+# Centralized mod metadata + loader-bootstrap versions.
+# Per-Minecraft-version dependency coordinates (Fabric API, Cloth Config, Mod Menu, Netty)
+# live as plain Kotlin maps in stonecutter.gradle.kts instead of per-node tables here:
+# Stonecutter scopes bracketed tables in this file by *project name*, not by the raw
+# Minecraft version, which would force one near-duplicate table per version. See
+# mc_ecosystem_facts_2026 memory for the source table this was generated from.
+mod.id = "aetherhop"
+mod.name = "AetherHop"
+mod.group = "fr.jason.aetherhop"
+mod.version = "1.0.0"
+mod.description = "Connect to through a SOCKS/HTTP proxy."
+
+deps.fabric_loader = "0.19.3"
+loomx.loom_version = "1.17-SNAPSHOT"

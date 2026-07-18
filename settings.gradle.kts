@@ -1,17 +1,36 @@
 pluginManagement {
     repositories {
-        maven("https://repo.polyfrost.cc/releases")
+        mavenLocal()
         mavenCentral()
         gradlePluginPortal()
-        maven("https://oss.sonatype.org/content/repositories/snapshots")
-        maven("https://maven.architectury.dev/")
-        maven("https://maven.fabricmc.net")
-        maven("https://maven.minecraftforge.net/")
-        maven("https://repo.spongepowered.org/maven/")
-        maven("https://repo.sk1er.club/repository/maven-releases/")
-        maven("https://repo.essential.gg/repository/maven-public/")
-        maven("https://jitpack.io/")
+        maven("https://maven.fabricmc.net/") { name = "FabricMC" }
+        maven("https://maven.kikugie.dev/releases") { name = "KikuGie Releases" }
+        maven("https://maven.kikugie.dev/snapshots") { name = "KikuGie Snapshots" }
+        maven("https://maven.parchmentmc.org") { name = "ParchmentMC" }
     }
 }
 
-rootProject.name = "ProxyHypixel"
+plugins {
+    id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
+    id("dev.kikugie.stonecutter") version "0.9.6"
+    // Applied here (not `apply false`!) so its Settings-level hook can inject the right
+    // Fabric Loom variant (remap vs. unobfuscated) onto each version subproject's buildscript
+    // classpath before that subproject's build.gradle.kts evaluates.
+    id("dev.kikugie.loom-back-compat") version "0.4"
+}
+
+// Fabric only - NeoForge and Quilt targets were dropped.
+val mcVersions = listOf(
+    "1.21", "1.21.1", "1.21.2", "1.21.3", "1.21.4", "1.21.5", "1.21.6",
+    "1.21.7", "1.21.8", "1.21.9", "1.21.10", "1.21.11",
+    "26.1", "26.1.1", "26.1.2", "26.2"
+)
+
+stonecutter {
+    create(rootProject) {
+        versions(*mcVersions.toTypedArray())
+        vcsVersion = "26.2"
+    }
+}
+
+rootProject.name = "AetherHop"

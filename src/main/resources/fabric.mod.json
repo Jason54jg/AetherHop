@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "${id}",
+  "version": "${version}",
+  "name": "${name}",
+  "description": "${description}",
+  "authors": ["Jason54"],
+  "license": "MIT",
+  "icon": "assets/aetherhop/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": ["fr.jason.aetherhop.AetherHop"],
+    "modmenu": ["fr.jason.aetherhop.integration.ModMenuIntegration"]
+  },
+  "mixins": ["aetherhop.mixins.json"],
+  "depends": {
+    "fabricloader": ">=0.19.0",
+    "minecraft": "~${minecraft}",
+    "java": ">=21"
+  },
+  "recommends": {
+    "modmenu": "*",
+    "cloth-config": "*"
+  }
+}

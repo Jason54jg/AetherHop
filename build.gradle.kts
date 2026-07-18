@@ -1,150 +1,95 @@
-@file:Suppress("UnstableApiUsage")
-
 plugins {
-    idea
-    java
-    id("cc.polyfrost.loom") version "0.10.0.+"
-    id("dev.architectury.architectury-pack200") version "0.1.3"
-    id("com.github.johnrengelman.shadow") version "8.1.1"
-//    id("io.freefair.lombok") version "8.6"
-    id("net.kyori.blossom") version "1.3.1"
+    // Picks the correct Loom variant for the active Minecraft version automatically.
+    id("dev.kikugie.loom-back-compat")
 }
 
-//Constants:
+val modVersion = property("mod.version") as String
+val modId = property("mod.id") as String
 
-val baseGroup: String by project
-val mcVersion: String by project
-val version: String by project
-val mixinGroup = "$baseGroup.mixin"
-val modid: String by project
-val modName: String by project
+version = "$modVersion+${sc.current.version}"
+base.archivesName = modId
 
-// Toolchains:
-java {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(8))
+val requiredJava: JavaVersion = when {
+    sc.current.parsed >= "26.1" -> JavaVersion.VERSION_25
+    else -> JavaVersion.VERSION_21
 }
 
-blossom {
-    replaceToken("%%VERSION%%", version)
-}
-
-// Minecraft configuration:
-loom {
-    launchConfigs {
-        "client" {
-            // If you don't want mixins, remove these lines
-            property("mixin.debug", "true")
-            property("asmhelper.verbose", "true")
-            arg("--tweakClass", "cc.polyfrost.oneconfig.loader.stage0.LaunchWrapperTweaker")
-            arg("-Dfml.coreMods.load", "fr.jason.proxyhypixel.transformer.FMLCore")
-            arg("--tweakClass", "fr.jason.proxyhypixel.transformer.Tweaker")
-        }
-    }
-    forge {
-        pack200Provider.set(dev.architectury.pack200.java.Pack200Adapter())
-    }
-    mixin {
-        defaultRefmapName.set("mixins.$modid.refmap.json")
-    }
-}
-
-sourceSets.main {
-    output.setResourcesDir(sourceSets.main.flatMap { it.java.classesDirectory })
-}
-
-// Dependencies:
+@Suppress("UNCHECKED_CAST")
+fun depFor(mapName: String): String =
+    (rootProject.extra[mapName] as Map<String, String>)[sc.current.version]
+        ?: error("No '$mapName' entry for Minecraft ${sc.current.version}")
 
 repositories {
     mavenCentral()
-    maven("https://repo.spongepowered.org/maven/")
-    maven("https://pkgs.dev.azure.com/djtheredstoner/DevAuth/_packaging/public/maven/v1")
-    maven("https://repo.polyfrost.cc/releases")
-    maven("https://repo.essential.gg/repository/maven-public")
-    maven("https://jitpack.io")
-}
-
-val shadowImpl: Configuration by configurations.creating {
-    configurations.implementation.get().extendsFrom(this)
+    // maven.terraformersmc.com's CDN deterministically truncates responses to Gradle's Apache
+    // HttpClient (confirmed on both the POM and the jar itself, with or without keepAlive,
+    // with or without metadataSources{artifact()}) - curl against the same URLs is unaffected.
+    // Modrinth's maven proxy mirrors the same jars without this incompatibility, but has its
+    // own occasional outages; rootProject/libs is a local fallback (flatDir ignores groupId,
+    // matches by "<artifact>-<version>.jar") - see readme.md Development section.
+    flatDir { dirs(rootProject.file("libs")) }
+    exclusiveContent {
+        forRepository { maven("https://api.modrinth.com/maven") { name = "Modrinth" } }
+        filter { includeGroup("maven.modrinth") }
+    }
+    exclusiveContent {
+        forRepository { maven("https://maven.shedaniel.me/") { name = "shedaniel" } }
+        filter { includeGroup("me.shedaniel.cloth") }
+    }
 }
 
 dependencies {
-    minecraft("com.mojang:minecraft:1.8.9")
-    mappings("de.oceanlabs.mcp:mcp_stable:22-1.8.9")
-    forge("net.minecraftforge:forge:1.8.9-11.15.1.2318-1.8.9")
+    minecraft("com.mojang:minecraft:${sc.current.version}")
+    loomx.applyMojangMappings()
 
-    compileOnly("cc.polyfrost:oneconfig-1.8.9-forge:0.2.1-alpha+")
-    shadowImpl("cc.polyfrost:oneconfig-wrapper-launchwrapper:1.0.0-beta+")
+    modImplementation("net.fabricmc:fabric-loader:${property("deps.fabric_loader")}")
+    modImplementation("net.fabricmc.fabric-api:fabric-api:${depFor("fabricApiVersions")}")
 
-    compileOnly("org.spongepowered:mixin:0.8.5")
-    annotationProcessor("org.spongepowered:mixin:0.8.5")
+    modImplementation("maven.modrinth:modmenu:${depFor("modMenuVersions")}")
+    modImplementation("me.shedaniel.cloth:cloth-config-fabric:${depFor("clothConfigVersions")}") {
+        exclude(group = "net.fabricmc.fabric-api")
+    }
 
-    compileOnly("org.projectlombok:lombok:1.18.32")
-    annotationProcessor("org.projectlombok:lombok:1.18.32")
-
-    shadowImpl("org.java-websocket:Java-WebSocket:1.5.4")
-
-    runtimeOnly("me.djtheredstoner:DevAuth-forge-legacy:1.2.0")
+    // Minecraft doesn't bundle this Netty module; jar-in-jar it at the exact version this
+    // release ships, so ConnectionProxyMixin's Socks5ProxyHandler/HttpProxyHandler resolve.
+    include(implementation("io.netty:netty-handler-proxy:${depFor("nettyVersions")}")!!)
 }
 
-// Tasks:
-
-tasks.withType(JavaCompile::class) {
-    options.encoding = "UTF-8"
-}
-
-tasks.withType(Jar::class) {
-    archiveBaseName.set(modName)
-    manifest.attributes.run {
-        this["FMLCorePlugin"] = "fr.jason.proxyhypixel.transformer.FMLCore"
-        this["FMLCorePluginContainsFMLMod"] = "true"
-        this["ForceLoadAsMod"] = "true"
-        this["TweakOrder"] = "0"
-        this["ModSide"] = "CLIENT"
-
-        // If you don't want mixins, remove these lines
-        this["TweakClass"] = "cc.polyfrost.oneconfig.loader.stage0.LaunchWrapperTweaker"
-        this["MixinConfigs"] = "mixins.$modid.json"
+loom {
+    runConfigs.all {
+        preferGradleTask = true
+        generateRunConfig = true
+        runDirectory = rootProject.file("run")
+        programArgs("--username=Dev")
     }
 }
+
+java {
+    withSourcesJar()
+    targetCompatibility = requiredJava
+    sourceCompatibility = requiredJava
+    toolchain {
+        vendor = JvmVendorSpec.ADOPTIUM
+        languageVersion = JavaLanguageVersion.of(requiredJava.majorVersion)
+    }
+}
+
+val resourceProps = mapOf(
+    "id" to modId,
+    "name" to property("mod.name"),
+    "version" to modVersion,
+    "description" to property("mod.description"),
+    "minecraft" to sc.current.version
+)
 
 tasks.processResources {
-    inputs.property("version", project.version)
-    inputs.property("mcversion", mcVersion)
-    inputs.property("modid", modid)
-    inputs.property("modName", modName)
-    inputs.property("mixinGroup", mixinGroup)
-
-    filesMatching(listOf("mcmod.info", "mixins.$modid.json")) {
-        expand(inputs.properties)
-    }
-
-    rename("(.+_at.cfg)", "META-INF/$1")
+    inputs.properties(resourceProps)
+    filesMatching("fabric.mod.json") { expand(resourceProps) }
 }
 
-
-val remapJar by tasks.named<net.fabricmc.loom.task.RemapJarTask>("remapJar") {
-    archiveClassifier.set("")
-    from(tasks.shadowJar)
-    input.set(tasks.shadowJar.get().archiveFile)
+tasks.register<Copy>("buildAndCollect") {
+    group = "build"
+    from(loomx.modJar.flatMap { it.archiveFile }, loomx.modSourcesJar.flatMap { it.archiveFile })
+    into(rootProject.layout.buildDirectory.dir("libs/$modVersion"))
+    dependsOn("build")
 }
-
-tasks.jar {
-    archiveClassifier.set("without-deps")
-    destinationDirectory.set(layout.buildDirectory.dir("badjars"))
-}
-
-tasks.shadowJar {
-    destinationDirectory.set(layout.buildDirectory.dir("badjars"))
-    archiveClassifier.set("all-dev")
-    configurations = listOf(shadowImpl)
-    doLast {
-        configurations.forEach {
-            println("Copying jars into mod: ${it.files}")
-        }
-    }
-
-    // If you want to include other dependencies and shadow them, you can relocate them in here
-    fun relocate(name: String) = relocate(name, "$baseGroup.deps.$name")
-}
-
-tasks.assemble.get().dependsOn(tasks.remapJar)

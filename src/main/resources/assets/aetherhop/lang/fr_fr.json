@@ -1,0 +1,11 @@
+{
+  "aetherhop.button": "Proxy",
+  "aetherhop.config.title": "AetherHop",
+  "aetherhop.config.category.general": "Général",
+  "aetherhop.config.enabled": "Proxy activé",
+  "aetherhop.config.address": "Adresse du proxy",
+  "aetherhop.config.address.tooltip": "Format : hôte:port (ex. proxy.example.com:8080)",
+  "aetherhop.config.type": "Type de proxy",
+  "aetherhop.config.username": "Nom d'utilisateur",
+  "aetherhop.config.password": "Mot de passe"
+}
