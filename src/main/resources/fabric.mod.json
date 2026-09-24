@@ -15,11 +15,11 @@
   "mixins": ["aetherhop.mixins.json"],
   "depends": {
     "fabricloader": ">=0.19.0",
-    "minecraft": "~${minecraft}",
-    "java": ">=21"
+    "minecraft": "${minecraft}",
+    "java": ">=${java}",
+    "cloth-config": "*"
   },
   "recommends": {
-    "modmenu": "*",
-    "cloth-config": "*"
+    "modmenu": "*"
   }
 }

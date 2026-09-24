@@ -6,7 +6,15 @@ plugins {
 val modVersion = property("mod.version") as String
 val modId = property("mod.id") as String
 
-version = "$modVersion+${sc.current.version}"
+// Jar name carries the whole Minecraft range it supports, e.g. aetherhop-1.0.0+mc1.21-1.21.10.jar
+val mcLabel = mapOf(
+    "1.21.10" to "1.21-1.21.10",
+    "1.21.11" to "1.21.11",
+    "26.1.2" to "26.1-26.1.2",
+    "26.3" to "26.2-26.3"
+)[sc.current.version] ?: error("No mcLabel for Minecraft ${sc.current.version}")
+
+version = "$modVersion+mc$mcLabel"
 base.archivesName = modId
 
 val requiredJava: JavaVersion = when {
@@ -18,6 +26,11 @@ val requiredJava: JavaVersion = when {
 fun depFor(mapName: String): String =
     (rootProject.extra[mapName] as Map<String, String>)[sc.current.version]
         ?: error("No '$mapName' entry for Minecraft ${sc.current.version}")
+
+@Suppress("UNCHECKED_CAST")
+fun nettyModules(): List<String> =
+    (rootProject.extra["nettyModules"] as Map<String, List<String>>)[sc.current.version]
+        ?: error("No 'nettyModules' entry for Minecraft ${sc.current.version}")
 
 repositories {
     mavenCentral()
@@ -50,9 +63,12 @@ dependencies {
         exclude(group = "net.fabricmc.fabric-api")
     }
 
-    // Minecraft doesn't bundle this Netty module; jar-in-jar it at the exact version this
-    // release ships, so ConnectionProxyMixin's Socks5ProxyHandler/HttpProxyHandler resolve.
-    include(implementation("io.netty:netty-handler-proxy:${depFor("nettyVersions")}")!!)
+    // Minecraft doesn't bundle these Netty modules (see nettyModules in stonecutter.gradle.kts),
+    // so jar-in-jar them: ConnectionProxyMixin's Socks5ProxyHandler/HttpProxyHandler need them.
+    val nettyVersion = depFor("nettyVersions")
+    for (module in nettyModules()) {
+        include(implementation("io.netty:$module:$nettyVersion")!!)
+    }
 }
 
 loom {
@@ -79,7 +95,9 @@ val resourceProps = mapOf(
     "name" to property("mod.name"),
     "version" to modVersion,
     "description" to property("mod.description"),
-    "minecraft" to sc.current.version
+    // Version range the jar declares in fabric.mod.json, e.g. ">=1.21 <=1.21.10"
+    "minecraft" to depFor("mcCompat"),
+    "java" to requiredJava.majorVersion
 )
 
 tasks.processResources {
