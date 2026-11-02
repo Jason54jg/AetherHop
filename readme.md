@@ -15,6 +15,10 @@ AetherHop is a Minecraft mod that lets you connect to a server through a proxy. 
 *   Authentication: Supports proxy servers that require username and password authentication.
 *   Easy to use: The mod is easy to use and configure.
 
+## Changelog
+
+Release notes for each version are in [CHANGELOG.md](CHANGELOG.md). When publishing on Modrinth or GitHub, copy the section for that version into the release description.
+
 ## Configuration
 
 The mod's configuration can be accessed in-game via Mod Menu. You can configure the following settings:
