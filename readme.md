@@ -70,6 +70,10 @@ If the saved configuration is damaged or unreadable, Minecraft can still start a
 
 If you encounter any issues or have questions, please open an issue on the project's GitHub repository.
 
+## Icon attribution
+
+The project icon uses the unmodified "Cyclone" artwork from [Twemoji v14.0.2](https://github.com/twitter/twemoji/blob/v14.0.2/assets/svg/1f300.svg), copyright Twitter, Inc. and other contributors, licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). The SVG was converted to PNG. See [the icon license](src/main/resources/assets/aetherhop/ICON-LICENSE.txt) for attribution and the full license text. This artwork is licensed separately from the mod's MIT-licensed code.
+
 ## Contributing
 
 Contributions are welcome! If you'd like to contribute to the development of AetherHop, please fork the repository and submit a pull request.
