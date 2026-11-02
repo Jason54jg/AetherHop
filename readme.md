@@ -20,10 +20,12 @@ AetherHop is a Minecraft mod that lets you connect to a server through a proxy. 
 The mod's configuration can be accessed in-game via Mod Menu. You can configure the following settings:
 
 *   Proxy Enabled: Toggle the use of a proxy on or off.
-*   Proxy Address: The address of your proxy server (e.g., `proxy.example.com:8080`).
+*   Proxy Address: The address of your proxy server (e.g., `proxy.example.com:8080` or `[::1]:8080` for IPv6).
 *   Proxy Type: HTTP or SOCKS.
 *   Proxy Username: The username for proxy authentication (if required).
 *   Proxy Password: The password for proxy authentication (if required).
+
+The password is masked on screen. It is still stored in the local `config/aetherhop.json` file so it can be used to authenticate.
 
 ## Supported versions
 
@@ -34,7 +36,8 @@ Fabric only. One jar per group of Minecraft versions:
 | 1.21 – 1.21.10 | `aetherhop-<version>+mc1.21-1.21.10.jar` |
 | 1.21.11 | `aetherhop-<version>+mc1.21.11.jar` |
 | 26.1 – 26.1.2 | `aetherhop-<version>+mc26.1-26.1.2.jar` |
-| 26.2 – 26.3 | `aetherhop-<version>+mc26.2-26.3.jar` |
+| 26.2 | `aetherhop-<version>+mc26.2.jar` |
+| 26.3 | `aetherhop-<version>+mc26.3.jar` |
 
 ## Requirements
 
@@ -59,6 +62,10 @@ Fabric only. One jar per group of Minecraft versions:
 
 If the proxy is enabled but can't be used (empty or malformed address, unresolvable host, refused login), the connection **fails** with an error in the log instead of going out directly, so you never connect unprotected by accident. Check `logs/latest.log` for lines starting with `AetherHop`.
 
+The multiplayer list's legacy status fallback is disabled while the proxy is enabled, because that fallback would otherwise connect directly. Normal server status requests still use the proxy.
+
+If the saved configuration is damaged or unreadable, Minecraft can still start and the settings screen explains the problem. Server connections remain blocked until you review and save the settings. The original configuration file is preserved until then. Saving writes a temporary file and replaces the old file to avoid leaving a partially written configuration.
+
 ## Support
 
 If you encounter any issues or have questions, please open an issue on the project's GitHub repository.
@@ -71,14 +78,15 @@ Contributions are welcome! If you'd like to contribute to the development of Aet
 
 This project targets Minecraft 1.21 through 26.3 on Fabric via [Stonecutter](https://stonecutter.kikugie.dev/). One shared source tree lives under `src/main/java`; version differences are gated with `//? if <condition> {` comments rather than duplicated per-version folders. (NeoForge and Quilt targets were dropped — Fabric only.)
 
-There are four Stonecutter builds, one per API-compatible group of Minecraft versions. Each is compiled against the group's newest version (the project name) and declares the whole group in `fabric.mod.json`:
+There are five Stonecutter builds. The 1.21 and 26.1 groups compile against their newest member; 26.2 and 26.3 each have a dedicated build with matching dependencies and Minecraft metadata:
 
 | Build | Covers | Why it's a separate build |
 |---|---|---|
 | `1.21.10` | 1.21 – 1.21.10 | `Connection.connect(…, boolean, …)`, `Minecraft.setScreen` |
 | `1.21.11` | 1.21.11 | `Connection.connect` takes an `EventLoopGroupHolder` |
 | `26.1.2` | 26.1 – 26.1.2 | unobfuscated jars, same API as 26.1.x |
-| `26.3` | 26.2 – 26.3 | `Minecraft.setScreen` removed in 26.2 → `setScreenAndShow`; 26.3 verified identical for everything the mod uses |
+| `26.2` | 26.2 | `Minecraft.setScreen` removed → `setScreenAndShow`; dedicated 26.2 dependencies |
+| `26.3` | 26.3 | dedicated 26.3 artifact and dependencies |
 
 The groups were verified member-by-member (official mappings for 1.21.x, `javap` on the client jars for 26.x, `javap` on Cloth Config across versions). Re-check every API AetherHop touches before widening a group or adding a Minecraft version.
 

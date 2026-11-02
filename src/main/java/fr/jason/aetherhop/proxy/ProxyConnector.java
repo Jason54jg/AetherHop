@@ -55,22 +55,47 @@ public final class ProxyConnector {
      *                          fails instead of silently going out directly, which would expose your real IP.
      */
     public static Target resolve(ProxyConfig config) throws ConnectException {
+        if (config == null || config.hasLoadError()) {
+            throw new ConnectException("AetherHop: review and save the proxy settings before connecting");
+        }
         if (!config.enabled) return null;
+        if (config.type == null || config.address == null || config.username == null || config.password == null) {
+            throw new ConnectException("AetherHop: the proxy settings contain missing values");
+        }
 
         String address = config.address.trim();
         if (address.isEmpty()) {
             throw new ConnectException("AetherHop: the proxy is enabled but no address is set");
         }
-        String[] parts = address.split(":", 2);
-        if (parts.length != 2 || parts[0].isEmpty()) {
-            throw new ConnectException("AetherHop: proxy address '" + address + "' is not in host:port format");
+        String host;
+        String portText;
+        if (address.startsWith("[")) {
+            int closing = address.indexOf(']');
+            if (closing < 2 || closing + 1 >= address.length() || address.charAt(closing + 1) != ':') {
+                throw new ConnectException("AetherHop: use [IPv6]:port for an IPv6 proxy");
+            }
+            host = address.substring(1, closing);
+            if (host.indexOf(':') < 0) {
+                throw new ConnectException("AetherHop: brackets are only valid for IPv6 addresses");
+            }
+            portText = address.substring(closing + 2).trim();
+        } else {
+            int separator = address.indexOf(':');
+            if (separator < 1 || separator != address.lastIndexOf(':')) {
+                throw new ConnectException("AetherHop: use host:port or [IPv6]:port for the proxy address");
+            }
+            host = address.substring(0, separator).trim();
+            portText = address.substring(separator + 1).trim();
+        }
+        if (host.isEmpty()) {
+            throw new ConnectException("AetherHop: no proxy host is set");
         }
 
         int port;
         try {
-            port = Integer.parseInt(parts[1].trim());
+            port = Integer.parseInt(portText);
         } catch (NumberFormatException e) {
-            throw new ConnectException("AetherHop: proxy port '" + parts[1] + "' is not a number");
+            throw new ConnectException("AetherHop: the proxy port is not a number");
         }
         if (port < 1 || port > 65535) {
             throw new ConnectException("AetherHop: proxy port " + port + " is out of range (1-65535)");
@@ -78,9 +103,9 @@ public final class ProxyConnector {
 
         // Must be resolved: Netty's ProxyHandler connects to this address directly, bypassing the
         // bootstrap's resolver, and an unresolved address makes that connect fail.
-        InetSocketAddress resolved = new InetSocketAddress(parts[0].trim(), port);
+        InetSocketAddress resolved = new InetSocketAddress(host, port);
         if (resolved.isUnresolved()) {
-            throw new ConnectException("AetherHop: can't resolve the proxy host '" + parts[0] + "'");
+            throw new ConnectException("AetherHop: can't resolve the proxy host '" + host + "'");
         }
         return new Target(config.type, resolved, config.username, config.password);
     }

@@ -24,6 +24,11 @@ public final class ProxyConfigScreen {
         ConfigEntryBuilder entryBuilder = builder.entryBuilder();
         ConfigCategory general = builder.getOrCreateCategory(Component.translatable("aetherhop.config.category.general"));
 
+        if (config.hasLoadError()) {
+            general.addEntry(entryBuilder.startTextDescription(Component.translatable("aetherhop.config.load_error"))
+                .build());
+        }
+
         general.addEntry(entryBuilder.startBooleanToggle(Component.translatable("aetherhop.config.enabled"), config.enabled)
             .setDefaultValue(false)
             .setSaveConsumer(value -> config.enabled = value)
@@ -45,10 +50,8 @@ public final class ProxyConfigScreen {
             .setSaveConsumer(value -> config.username = value)
             .build());
 
-        general.addEntry(entryBuilder.startStrField(Component.translatable("aetherhop.config.password"), config.password)
-            .setDefaultValue("")
-            .setSaveConsumer(value -> config.password = value)
-            .build());
+        general.addEntry(new PasswordEntry(Component.translatable("aetherhop.config.password"), config.password,
+            entryBuilder.getResetButtonKey(), value -> config.password = value));
 
         return builder.build();
     }

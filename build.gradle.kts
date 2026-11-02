@@ -11,7 +11,8 @@ val mcLabel = mapOf(
     "1.21.10" to "1.21-1.21.10",
     "1.21.11" to "1.21.11",
     "26.1.2" to "26.1-26.1.2",
-    "26.3" to "26.2-26.3"
+    "26.2" to "26.2",
+    "26.3" to "26.3"
 )[sc.current.version] ?: error("No mcLabel for Minecraft ${sc.current.version}")
 
 version = "$modVersion+mc$mcLabel"
@@ -63,6 +64,9 @@ dependencies {
         exclude(group = "net.fabricmc.fabric-api")
     }
 
+    testImplementation("org.junit.jupiter:junit-jupiter:5.11.4")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.11.4")
+
     // Minecraft doesn't bundle these Netty modules (see nettyModules in stonecutter.gradle.kts),
     // so jar-in-jar them: ConnectionProxyMixin's Socks5ProxyHandler/HttpProxyHandler need them.
     val nettyVersion = depFor("nettyVersions")
@@ -103,6 +107,10 @@ val resourceProps = mapOf(
 tasks.processResources {
     inputs.properties(resourceProps)
     filesMatching("fabric.mod.json") { expand(resourceProps) }
+}
+
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
 }
 
 tasks.register<Copy>("buildAndCollect") {

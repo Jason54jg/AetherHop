@@ -8,7 +8,6 @@ import java.nio.file.Path;
 
 public final class AetherHop implements ClientModInitializer {
     public static final String MOD_ID = /*$ mod_id*/ "aetherhop";
-    public static final String VERSION = /*$ mod_version*/ "1.0.0";
 
     private static ProxyConfig config;
 

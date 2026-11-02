@@ -26,9 +26,9 @@ plugins {
 //   1.21.10 -> 1.21 .. 1.21.10   (Connection.connect(.., boolean, ..), Minecraft.setScreen)
 //   1.21.11 -> 1.21.11           (Connection.connect(.., EventLoopGroupHolder, ..))
 //   26.1.2  -> 26.1 .. 26.1.2
-//   26.3    -> 26.2 .. 26.3      (Minecraft.setScreen removed in 26.2 -> setScreenAndShow;
-//                                 26.3 checked identical to 26.2 for everything the mod uses)
-val mcVersions = listOf("1.21.10", "1.21.11", "26.1.2", "26.3")
+//   26.2    -> 26.2             (Minecraft.setScreen removed -> setScreenAndShow)
+//   26.3    -> 26.3             (separate artifact and dependency set)
+val mcVersions = listOf("1.21.10", "1.21.11", "26.1.2", "26.2", "26.3")
 
 stonecutter {
     create(rootProject) {

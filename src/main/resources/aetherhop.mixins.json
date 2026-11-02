@@ -9,6 +9,7 @@
     "ConnectionProxyMixin"
   ],
   "client": [
-    "JoinMultiplayerScreenMixin"
+    "JoinMultiplayerScreenMixin",
+    "ServerStatusPingerMixin"
   ]
 }

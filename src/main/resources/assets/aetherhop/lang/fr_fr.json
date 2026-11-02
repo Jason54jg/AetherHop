@@ -4,7 +4,8 @@
   "aetherhop.config.category.general": "Général",
   "aetherhop.config.enabled": "Proxy activé",
   "aetherhop.config.address": "Adresse du proxy",
-  "aetherhop.config.address.tooltip": "Format : hôte:port (ex. proxy.example.com:8080)",
+  "aetherhop.config.address.tooltip": "Format : hôte:port ou [IPv6]:port (ex. proxy.example.com:8080 ou [::1]:8080)",
+  "aetherhop.config.load_error": "La configuration du proxy n'a pas pu être chargée. Les connexions sont bloquées. Vérifiez vos paramètres et enregistrez, ou désactivez le proxy et enregistrez pour vous connecter directement.",
   "aetherhop.config.type": "Type de proxy",
   "aetherhop.config.username": "Nom d'utilisateur",
   "aetherhop.config.password": "Mot de passe"
